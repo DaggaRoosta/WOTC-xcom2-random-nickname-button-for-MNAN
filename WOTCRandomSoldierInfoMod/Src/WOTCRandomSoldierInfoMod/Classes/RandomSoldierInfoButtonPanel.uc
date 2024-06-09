@@ -10,7 +10,7 @@
 
 class RandomSoldierInfoButtonPanel extends Object
 	config(RandomSoldierInfoButtonPanel);
-	// config(WOTCRandomSoldierInfoMod);
+	// config(MNANNameRandomizer);
 
 var config int					RNBConf_PanelXOffset;
 var config int					RNBConf_PanelYOffset;
@@ -26,6 +26,7 @@ var UIText						RandomButtonTitle;
 var UIButton 					RandomFirstnameButton;
 var UIButton 					RandomNicknameButton;
 var UIButton 					RandomLastnameButton;
+var UIButton 					RandomFullnameButton;
 var UIButton					RandomCountryButton;
 var UIButton					RandomBioButton;
 
@@ -59,8 +60,9 @@ const BUTTON_SPACING			=	3;
 	finally.
 */
 
-const FIRSTNAME_BUTTON_LABEL	= "Random First Name";
+const FIRSTNAME_BUTTON_LABEL	= "Random Fuckt Name";
 const LASTNAME_BUTTON_LABEL		= "Random Last Name";
+const FULLNAME_BUTTON_LABEL		= "Random Full Name";
 const NICKNAME_BUTTON_LABEL		= "Random Nickname ";
 const COUNTRY_BUTTON_LABEL		= "Random Country    ";
 const BIO_BUTTON_LABEL			= "Random Bio           ";
@@ -112,7 +114,7 @@ simulated function InitPanel(UIScreen Screen)
 
 /*
 	Event handlers. Wrap these for happiness.
-	See WOTCRandomSoldierInfoMod.uc
+	See MNANNameRandomizer.uc
 */
 
 simulated function Event_OnReceiveFocus(UIScreen Screen)
@@ -179,6 +181,7 @@ simulated function Event_OnRemoved(UIScreen Screen)
 	RandomFirstnameButton.Destroy();
 	RandomNicknameButton.Destroy();
 	RandomLastnameButton.Destroy();
+	RandomFullnameButton.Destroy();
 	RandomCountryButton.Destroy();
 	RandomBioButton.Destroy();
 }
@@ -201,8 +204,10 @@ simulated function InitUI()
 
 	RandomLastnameButton	= CreateButton('randomLastnameButton',	LASTNAME_BUTTON_LABEL,	OnRandomLastnameButtonPress,	AnchorPos, RandomFirstnameButton.X, ButtonVertOffsetFrom(RandomFirstnameButton));
 
+	RandomFullnameButton	= CreateButton('randomFullnameButton',	FULLNAME_BUTTON_LABEL,	OnRandomFullnameButtonPress,	AnchorPos, RandomFirstnameButton.X, ButtonVertOffsetFrom(RandomLastnameButton));
+
 	NicknameButtonLabelAndTooltip(strNicknameButtonLabel, strNicknameButtonTooltip);
-	RandomNicknameButton	= CreateButton('randomNicknameButton',	strNicknameButtonLabel,	OnRandomNicknameButtonPress,	AnchorPos, RandomFirstnameButton.X, ButtonVertOffsetFrom(RandomLastnameButton));
+	RandomNicknameButton	= CreateButton('randomNicknameButton',	strNicknameButtonLabel,	OnRandomNicknameButtonPress,	AnchorPos, RandomFirstnameButton.X, ButtonVertOffsetFrom(RandomFullnameButton));
 	DisableNicknameButtonIfRequired(strNicknameButtonTooltip);
 
 	RandomCountryButton		= CreateButton('randomCountryButton',	COUNTRY_BUTTON_LABEL,	OnRandomCountryButtonPress,		AnchorPos, RandomFirstnameButton.X,	ButtonVertOffsetFrom(RandomNicknameButton));
@@ -248,6 +253,7 @@ simulated function DisableFirstNameButtonIfRequired(const out string strTooltip)
 	if (Unit.GetMyTemplateName() == 'SparkSoldier')
 	{
 		RandomFirstnameButton.SetDisabled(true, strTooltip);
+		RandomFullnameButton.SetDisabled(true, strTooltip);
 	}
 }
 
@@ -409,6 +415,45 @@ simulated function OnRandomLastnameButtonPress(UIButton button)
 		Currently, last names aren't reflected in bios but no reason they couldn't be
 		one day.
 	*/
+	UpdateCharacterBio(strLastname, strNewLastname);
+	ForceCustomizationMenuRefresh();
+}
+
+simulated function OnRandomFullnameButtonPress(UIButton button)
+{
+	local string 					strNewFirstname;
+	local string					strNewLastname;
+
+	local string 					strFirstname;
+	local string 					strNickname;
+	local string 					strLastname;
+
+	strFirstName = Unit.GetFirstName();
+	strNickName = Unit.GetNickName();
+	strLastName = Unit.GetLastName();
+
+	strNewFirstName = "NEWNAME";	// have to catch it whether or not I use it.
+	strNewLastName	= "NEWLAST";
+
+	/*
+		XGCharacterGenerator class has member
+		GenerateName(int gender, name countryname, OUT string first, OUT string last, optional int race)
+		(the "out" keyword denotes pass-by-reference in UnrealScript).
+
+		function NameCheck in XComGameState_Unit takes an XGCharacterGenerator as param (then calls GenerateName)
+
+		Need iGender, which is member of kAppearance, which is member of Unit. Some last names are filtered
+		by gender, e.g. countries like Iceland.
+	*/
+	CharacterGenerator.GenerateName(Unit.kAppearance.iGender, Unit.GetCountry(), strNewFirstname, strNewLastname, Unit.kAppearance.iRace);
+
+	Unit.SetUnitName(strNewFirstname, strNewLastname, strNickname);
+
+	/*
+		Currently, last names aren't reflected in bios but no reason they couldn't be
+		one day.
+	*/
+	UpdateCharacterBio(strFirstname, strNewFirstname);
 	UpdateCharacterBio(strLastname, strNewLastname);
 	ForceCustomizationMenuRefresh();
 }
