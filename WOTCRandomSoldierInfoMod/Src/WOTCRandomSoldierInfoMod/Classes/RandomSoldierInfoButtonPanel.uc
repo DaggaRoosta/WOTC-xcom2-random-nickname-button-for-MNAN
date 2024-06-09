@@ -60,7 +60,7 @@ const BUTTON_SPACING			=	3;
 	finally.
 */
 
-const FIRSTNAME_BUTTON_LABEL	= "Random Fuckt Name";
+const FIRSTNAME_BUTTON_LABEL	        = "Random First Name";
 const LASTNAME_BUTTON_LABEL		= "Random Last Name";
 const FULLNAME_BUTTON_LABEL		= "Random Full Name";
 const NICKNAME_BUTTON_LABEL		= "Random Nickname ";
